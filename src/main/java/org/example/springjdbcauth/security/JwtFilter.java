@@ -20,11 +20,12 @@ import java.io.IOException;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-    @Autowired
     JwtService jwtService;
-    @Autowired
     CustomUserDetailsService customUserDetailsService;
-
+    public JwtFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService){
+        this.jwtService = jwtService;
+        this.customUserDetailsService = customUserDetailsService;
+    }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
@@ -40,6 +41,13 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if(token==null){
+            filterChain.doFilter(request,response);
+            return;
+        }
+
+        if(jwtService.isTokenExpired(token)){
+            Cookie cookie = new Cookie("jwt",null);
+            response.addCookie(cookie);
             filterChain.doFilter(request,response);
             return;
         }
